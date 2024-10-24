@@ -24,7 +24,7 @@ volatile sig_atomic_t alarm_triggered = 0;
 // Funkcia na obsluhu alarmu
 void handle_alarm(int sig) {
     alarm_triggered = 1; // Alarm je aktivovaný
-    printf("\n→ Zadaj tú súradnicu: ");
+    printf("\n→ ZADAJ TÚ SÚRADNICU: ");
     fflush(stdout);
 }
 
