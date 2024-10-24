@@ -9,7 +9,7 @@
 #include <signal.h> // Signály na spracovanie
 
 #define PORT 7777
-
+#define CAS 10
 // Štruktúra pre súradnice bodu
 typedef struct {
     float X;
@@ -26,6 +26,7 @@ void handle_alarm(int sig) {
     alarm_triggered = 1; // Alarm je aktivovaný
     printf("\n→ ZADAJ TÚ SÚRADNICU: ");
     fflush(stdout);
+    alarm(CAS);
 }
 
 // Funkcia na obsluhu Ctrl+C
@@ -39,7 +40,7 @@ void nacitajFloat(const char* prompt, float* value) {
     char input[128];
 
     while (1) {
-        alarm(10); // Nastaviť alarm na 10 sekúnd
+        alarm(CAS); // Nastaviť alarm na 10 sekúnd
         printf("%s", prompt);
         fflush(stdout); // Uistiť sa, že prompt sa zobrazí
 
@@ -51,8 +52,8 @@ void nacitajFloat(const char* prompt, float* value) {
             if (sscanf(input, "%f", value) == 1) {
                 break; // Validný vstup
             } else {
-                sleep(1);
                 printf("Neplatný vstup! Skús to znova.\n");
+                fflush(stdout);
             }
         } else {
             printf("Chyba pri načítaní vstupu.\n");
