@@ -7,6 +7,7 @@
 - [Inštalácia](#inštalácia)
 - [Spustenie](#spustenie)
 - [Ovládanie](#ovládanie)
+- [Prvky](#prvky)
 
 
 ## Úvod
