@@ -20,7 +20,7 @@ float vypocitajVzdialenost(float x1, float y1, float x2, float y2) {
     return sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2)); // Vzdialenosť
 }
 
-void handle_sigint(int sig) {
+void signalik(int sig) {
     system("pkill xterm"); // Zatvorenie xterm na SIGINT
     exit(0);
 }
@@ -63,7 +63,7 @@ int main() {
         return 0;
     }
 
-    signal(SIGINT, handle_sigint); // Nastavenie signálu pre CTRL+C
+    signal(SIGINT, signalik); // Nastavenie signálu pre CTRL+C
 
     int opt = 1; // Pre opätovné použitie adresy
     if (setsockopt(sock_desc, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
