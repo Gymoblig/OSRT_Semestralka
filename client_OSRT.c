@@ -16,8 +16,6 @@ typedef struct {
     float Y;
 } Bod;
 
-pthread_mutex_t mutex;
-
 // Globálny flag pre alarm
 volatile sig_atomic_t alarm_triggered = 0;
 
