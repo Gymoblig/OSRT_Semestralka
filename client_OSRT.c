@@ -16,6 +16,7 @@ typedef struct {
     float Y;
 } Bod;
 
+
 // Globálny flag pre alarm
 volatile sig_atomic_t alarm_triggered = 0;
 
@@ -29,6 +30,14 @@ void alarmik(int sig) {
 
 // Funkcia na obsluhu Ctrl+C
 void signalik(int sig) {
+    //Kontrola či deti existujú, ak áno zabiť SIGKILL
+    if (pid1 > 0) {
+        kill(pid1, SIGKILL);
+    }
+    if (pid2 > 0) {
+        kill(pid2, SIGKILL);
+    }
+
     system("pkill xterm"); // Zatvoriť terminál, keď je Ctrl+C stlačené
     exit(0);
 }
