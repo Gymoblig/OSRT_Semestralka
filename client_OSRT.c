@@ -22,7 +22,7 @@ pthread_mutex_t mutex;
 volatile sig_atomic_t alarm_triggered = 0;
 
 // Funkcia na obsluhu alarmu
-void handle_alarm(int sig) {
+void alarmik(int sig) {
     alarm_triggered = 1; // Alarm je aktivovaný
     printf("\n→ ZADAJ TÚ SÚRADNICU: ");
     fflush(stdout);
@@ -30,7 +30,7 @@ void handle_alarm(int sig) {
 }
 
 // Funkcia na obsluhu Ctrl+C
-void handle_sigint(int sig) {
+void signalik(int sig) {
     system("pkill xterm"); // Zatvoriť terminál, keď je Ctrl+C stlačené
     exit(0);
 }
@@ -120,8 +120,8 @@ void posliNaServerBod2(Bod bod) {
 int main() {
     int pipefd1[2], pipefd2[2];
 
-    signal(SIGINT, handle_sigint); // Spracovanie Ctrl+C
-    signal(SIGALRM, handle_alarm);  // Spracovanie alarmu
+    signal(SIGINT, signalik); // Spracovanie Ctrl+C
+    signal(SIGALRM, alarmik);  // Spracovanie alarmu
 
     // Vytvorenie pipes
     if (pipe(pipefd1) == -1 || pipe(pipefd2) == -1) {
