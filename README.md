@@ -33,12 +33,12 @@ Ak toto máme splnené tak môžeme pokračovať nasledovne:
 
 2. **Naklonujeme repozitár** s kódom:
    ```bash
-   git clone 
+   git clone Gymoblig/OSRT_Semestralka
    ```
 
 3. **Prejdeme do adresára projektu**:
    ```bash
-   cd názov
+   cd OSRT_Semestralka-main
    ```
 
 ## Spustenie
