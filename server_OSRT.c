@@ -20,11 +20,6 @@ float vypocitajVzdialenost(float x1, float y1, float x2, float y2) {
     return sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2)); // Vzdialenosť
 }
 
-void signalik(int sig) {
-    system("pkill xterm"); // Zatvorenie xterm na SIGINT
-    exit(0);
-}
-
 // Vlákno na prijímanie bodu
 void* prijmiBod(void* sock_desc) {
     int temp_sock_desc = *(int*)sock_desc; // Dočasný socket
@@ -51,8 +46,6 @@ void* prijmiBod(void* sock_desc) {
     close(temp_sock_desc); // Zatvorenie socketu
     
     printf("→ Vlákno na prijatie bodu dokončilo prácu.\n");
-    
-    return NULL; // Návrat z vlákna
 }
 
 int main() {
@@ -62,8 +55,6 @@ int main() {
         printf("Nepodarilo sa vytvoriť socket!\n");
         return 0;
     }
-
-    signal(SIGINT, signalik); // Nastavenie signálu pre CTRL+C
 
     int opt = 1; // Pre opätovné použitie adresy
     if (setsockopt(sock_desc, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
@@ -135,7 +126,5 @@ int main() {
     // Uzavretie serverového socketu
     close(temp_sock_desc);
     close(sock_desc);
-    printf("Pre ukončenie stlač CTRL+C\n");
-    getchar();
     return 0;
 }

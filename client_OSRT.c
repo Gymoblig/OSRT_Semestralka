@@ -10,7 +10,7 @@
 #include <time.h>
 
 #define PORT 7777
-#define CAS 4
+#define CAS 10
 // Štruktúra pre súradnice bodu
 typedef struct {
     float X;
@@ -84,8 +84,7 @@ void nacitajFloat(const char* prompt, float* value) {
             printf("Chyba pri načítaní vstupu.\n");
         }
     }
-
-    alarm(0); // Zrušiť alarm
+    spustiCasovac(timer, 0);
 }
 
 // Funkcia na odoslanie súradníc bodu 1
