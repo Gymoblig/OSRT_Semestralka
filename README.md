@@ -192,33 +192,58 @@ void* prijmiBod(void* sock_desc) {
 }
 ```
 
-V **main()** prebehne vytvorenie socketu a nastavenie servera. Keď sa prijatie bodov dokončí tak sa pomocou vypovitajVzdialenost() vypočíta vzdialenosť a server ju vypíše. Keď ju server zistí pošle ju späť klientovi. 
+V **main()** prebehne vytvorenie socketu a nastavenie servera. Keď sa prijatie bodov dokončí tak sa pomocou vypocitajVzdialenost() vypočíta vzdialenosť a server ju vypíše. Keď ju server zistí pošle ju späť klientovi. 
 
-Pri **client.c** ešte sú **handle_alarm()**, **handle_sigint** a **nacitajFloat()**. 
+Pri **client.c** ešte sú **signalik** a **nacitajFloat()**. 
 - Kde handle_alarm() slúži pre funkcionalitu časovača kde pri nacitajFloat() ak používateľ do 10 sekúnd nedá parameter tak to vypíše znova žiadosť o súradnicu.
 - handle_sigint slúži na opätovné využitie signálu. Využitie spočíva pri stlačení kláves 'CTRL+C' kde sa zabijú všetky okná xterm, keďže sa **client.c** a **server.c** otvárajú v xterm okne čo je spúšťané cez Makefile.
 
-**Definovanie signalov pre alarm a pre sigint v main()**
+**Definovanie signalu pre sigint v main()**
 ```c
- signal(SIGINT, handle_sigint); // Spracovanie Ctrl+C
-    signal(SIGALRM, handle_alarm);  // Spracovanie alarmu
+ signal(SIGINT, signalik); // Spracovanie Ctrl+C
 ```
 
-**handle_alarm=()**
+**Časovač:**
 ```c
 // Funkcia na obsluhu alarmu
-void handle_alarm(int sig) {
-    alarm_triggered = 1; // Alarm je aktivovaný
-    printf("\n→ ZADAJ TÚ SÚRADNICU: ");
-    fflush(stdout);
-    alarm(CAS);
+void timer_handler(int sig) 
+{
+    printf("\nProsím zadaj súradnicu: ");
+    fflush(stdout); 
+}
+
+timer_t nastav_casovac() {
+    struct sigevent sev;
+    sev.sigev_notify = SIGEV_SIGNAL;
+    sev.sigev_signo = SIGALRM; // Signál pri uplynutí času
+
+    timer_t timer;
+    timer_create(CLOCK_REALTIME, &sev, &timer);
+    return timer;
+}
+
+void spustiCasovac(timer_t casovac, int sekundy)
+{
+  struct itimerspec casik;
+  casik.it_value.tv_sec=sekundy;
+  casik.it_value.tv_nsec=0;
+  casik.it_interval.tv_sec=sekundy;
+  casik.it_interval.tv_nsec=0;
+  timer_settime(casovac,0,&casik,NULL);
 }
 ```
 
-**handle_sigint()**
+**signalik()**
 ```c
 // Funkcia na obsluhu Ctrl+C
-void handle_sigint(int sig) {
+void signalik(int sig) {
+    //Kontrola či deti existujú, ak áno zabiť SIGKILL
+    if (pid1 > 0) {
+        kill(pid1, SIGKILL);
+    }
+    if (pid2 > 0) {
+        kill(pid2, SIGKILL);
+    }
     system("pkill xterm"); // Zatvoriť terminál, keď je Ctrl+C stlačené
     exit(0);
 }
@@ -229,15 +254,17 @@ void handle_sigint(int sig) {
 // Funkcia na načítanie float hodnoty
 void nacitajFloat(const char* prompt, float* value) {
     char input[128];
+    signal(SIGALRM, timer_handler); // Nastavenie signálu pre časovač
 
+    // Nastavenie časovača
+    timer_t timer = nastav_casovac();
     while (1) {
-        alarm(CAS); // Nastaviť alarm na 10 sekúnd
+        spustiCasovac(timer, CAS);
         printf("%s", prompt);
         fflush(stdout); // Uistiť sa, že prompt sa zobrazí
 
         // Čítanie vstupu
         if (fgets(input, sizeof(input), stdin) != NULL) {
-            alarm_triggered = 0; // Reset alarmu
 
             // Pokúsiť sa previesť na float
             if (sscanf(input, "%f", value) == 1) {
@@ -250,7 +277,6 @@ void nacitajFloat(const char* prompt, float* value) {
             printf("Chyba pri načítaní vstupu.\n");
         }
     }
-
-    alarm(0); // Zrušiť alarm
+    spustiCasovac(timer, 0);
 }
 ```
