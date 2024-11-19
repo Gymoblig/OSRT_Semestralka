@@ -7,26 +7,43 @@
 #include <arpa/inet.h>
 #include <sys/wait.h>
 #include <signal.h> // Signály na spracovanie
+#include <time.h>
 
 #define PORT 7777
-#define CAS 10
+#define CAS 4
 // Štruktúra pre súradnice bodu
 typedef struct {
     float X;
     float Y;
 } Bod;
 
-
-// Globálny flag pre alarm
-volatile sig_atomic_t alarm_triggered = 0;
-
-// Funkcia na obsluhu alarmu
-void alarmik(int sig) {
-    alarm_triggered = 1; // Alarm je aktivovaný
-    printf("\n→ ZADAJ TÚ SÚRADNICU: ");
-    fflush(stdout);
-    alarm(CAS);
+void timer_handler(int sig) 
+{
+    printf("\nProsím zadaj súradnicu: ");
+    fflush(stdout); 
 }
+
+timer_t nastav_casovac() {
+    struct sigevent sev;
+    sev.sigev_notify = SIGEV_SIGNAL;
+    sev.sigev_signo = SIGALRM; // Signál pri uplynutí času
+
+    timer_t timer;
+    timer_create(CLOCK_REALTIME, &sev, &timer);
+    return timer;
+}
+
+void spustiCasovac(timer_t casovac, int sekundy)
+{
+  struct itimerspec casik;
+  casik.it_value.tv_sec=sekundy;
+  casik.it_value.tv_nsec=0;
+  casik.it_interval.tv_sec=sekundy;
+  casik.it_interval.tv_nsec=0;
+  timer_settime(casovac,0,&casik,NULL);
+}
+//Globálne pid pre signal:
+pid_t pid1 = -1, pid2 = -1;     
 
 // Funkcia na obsluhu Ctrl+C
 void signalik(int sig) {
@@ -37,7 +54,6 @@ void signalik(int sig) {
     if (pid2 > 0) {
         kill(pid2, SIGKILL);
     }
-
     system("pkill xterm"); // Zatvoriť terminál, keď je Ctrl+C stlačené
     exit(0);
 }
@@ -45,15 +61,17 @@ void signalik(int sig) {
 // Funkcia na načítanie float hodnoty
 void nacitajFloat(const char* prompt, float* value) {
     char input[128];
+    signal(SIGALRM, timer_handler); // Nastavenie signálu pre časovač
 
+    // Nastavenie časovača
+    timer_t timer = nastav_casovac();
     while (1) {
-        alarm(CAS); // Nastaviť alarm na 10 sekúnd
+        spustiCasovac(timer, CAS);
         printf("%s", prompt);
         fflush(stdout); // Uistiť sa, že prompt sa zobrazí
 
         // Čítanie vstupu
         if (fgets(input, sizeof(input), stdin) != NULL) {
-            alarm_triggered = 0; // Reset alarmu
 
             // Pokúsiť sa previesť na float
             if (sscanf(input, "%f", value) == 1) {
@@ -128,7 +146,6 @@ int main() {
     int pipefd1[2], pipefd2[2];
 
     signal(SIGINT, signalik); // Spracovanie Ctrl+C
-    signal(SIGALRM, alarmik);  // Spracovanie alarmu
 
     // Vytvorenie pipes
     if (pipe(pipefd1) == -1 || pipe(pipefd2) == -1) {
